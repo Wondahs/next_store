@@ -1,13 +1,13 @@
 /* eslint-disable prettier/prettier */
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { JwtStrategy } from 'passport-jwt';
+import { Strategy } from 'passport-jwt';
 import { JwtService } from '@nestjs/jwt';
 import { ExtractJwt } from 'passport-jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
-export class JwtAuthStrategy extends PassportStrategy(JwtStrategy) {
+export class JwtAuthStrategy extends PassportStrategy(Strategy) {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,

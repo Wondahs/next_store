@@ -1,12 +1,12 @@
 /* eslint-disable prettier/prettier */
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { OrderStatus } from '@prisma/client';
 
 @Injectable()
 export class OrdersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async createOrder(userId: number, createOrderDto: CreateOrderDto) {
     // Create a new order and its associated chatroom in a transaction
@@ -29,7 +29,7 @@ export class OrdersService {
         },
       });
 
-      return {newOrder, chatroom};
+      return { newOrder, chatroom };
     });
 
     return order;
@@ -51,20 +51,13 @@ export class OrdersService {
   }
 
   async getOneOrder(id: number, userId: number, role: string) {
-    if (role === 'ADMIN') {
-      return this.prisma.order.findUnique({
-        where: { id },
-        include: { chatroom: true },
-      });
+    const order = role === 'ADMIN' ?
+      await this.prisma.order.findUnique({ where: { id }, include: { chatroom: true } }) :
+      await this.prisma.order.findUnique({ where: { userId, id }, include: { chatroom: true } });
+    if (!order) {
+      throw new NotFoundException(`Order with id: ${id} not found`);
     }
-
-    return this.prisma.order.findUnique({
-      where: {
-        userId,
-        id,
-      },
-      include: { chatroom: true },
-    });
+    return order;
   }
 
   async updateOrderStatus(orderId: number, status: OrderStatus, userRole: string) {
@@ -80,7 +73,7 @@ export class OrdersService {
 
     // Throw error if order not found
     if (!order) {
-      throw new ForbiddenException('Order not found');
+      throw new NotFoundException(`Order with id: ${orderId} not  found`);
     }
 
     // Ensure chatroom is closed before moving to PROCESSING

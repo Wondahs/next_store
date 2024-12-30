@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
-import { IsJSON, IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { OrderStatus } from "@prisma/client";
+import { IsEnum, IsJSON, IsNotEmpty, IsNumber, IsObject, IsString } from "class-validator";
 
 export class CreateOrderDto {
     @IsString()
@@ -10,7 +11,11 @@ export class CreateOrderDto {
     @IsNotEmpty()
     quantity: number;
 
-    @IsJSON()
+    @IsObject()
     @IsNotEmpty()
     specifications: Record<string, any>;
+
+    @IsEnum(OrderStatus)
+    @IsNotEmpty()
+    status: OrderStatus;
 }

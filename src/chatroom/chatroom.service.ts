@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -72,7 +72,7 @@ export class ChatroomService {
     });
     if (!chatroom) throw new NotFoundException(`Chatroom with id ${chatroomId} not found`);
     if (chatroom.order.userId !== userId && role !== UserRole.ADMIN) throw new UnauthorizedException(`User with id: ${userId} is not authorized to send messages to this chatroom`);
-    if (chatroom.isClosed) throw new UnauthorizedException(`Chatroom with id ${chatroomId} is closed`);
+    if (chatroom.isClosed) throw new ConflictException(`Chatroom with id ${chatroomId} is closed`);
 
     return await this.prisma.message.create({
       data: {

@@ -8,7 +8,6 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { OrdersModule } from './orders/orders.module';
 import { ChatroomModule } from './chatroom/chatroom.module';
-import { MessageModule } from './message/message.module';
 
 @Module({
   imports: [PrismaModule, AuthModule,
@@ -17,7 +16,6 @@ import { MessageModule } from './message/message.module';
     }),
     OrdersModule,
     ChatroomModule,
-    MessageModule
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

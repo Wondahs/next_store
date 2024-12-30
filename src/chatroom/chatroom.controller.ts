@@ -37,15 +37,18 @@ export class ChatroomController {
   createMassage(
     @Param('chatroomId', ParseIntPipe) chatroomId: number,
     @User('id') userId: number,
-    @Body('message') message: string
+    @Body('message') message: string,
+    @User('role') role: UserRole
   ) {
-    return this.chatroomService.createMessage(chatroomId, userId, message);
+    return this.chatroomService.createMessage(chatroomId, userId, role, message);
   }
 
   @Get(':chatroomId/messages')
   getMessages(
-    @Param('chatroomId', ParseIntPipe) chatroomId: number
+    @Param('chatroomId', ParseIntPipe) chatroomId: number,
+    @User('id') userId: number,
+    @User('role') role: UserRole
   ) {
-    return this.chatroomService.getMessages(chatroomId);
+    return this.chatroomService.getMessages(chatroomId, userId, role);
   }
 }

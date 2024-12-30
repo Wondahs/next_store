@@ -61,12 +61,17 @@ export class ChatroomService {
   async createMessage(
     chatroomId: number,
     userId: number,
+    role: UserRole,
     message: string
   ) {
     const chatroom = await this.prisma.chatroom.findUnique({
       where: { id: chatroomId },
+      include: {
+        order: true,
+      }
     });
     if (!chatroom) throw new NotFoundException(`Chatroom with id ${chatroomId} not found`);
+    if (chatroom.order.userId !== userId && role !== UserRole.ADMIN) throw new UnauthorizedException(`User with id: ${userId} is not authorized to send messages to this chatroom`);
     if (chatroom.isClosed) throw new UnauthorizedException(`Chatroom with id ${chatroomId} is closed`);
 
     return await this.prisma.message.create({
@@ -80,14 +85,18 @@ export class ChatroomService {
 
   async getMessages(
     chatroomId: number,
+    userId: number,
+    role: UserRole
   ) {
     const chatroom = await this.prisma.chatroom.findUnique({
       where: { id: chatroomId },
       include: {
+        order: true,
         messages: true
       }
     });
     if (!chatroom) throw new NotFoundException(`Chatroom with id ${chatroomId} not found`);
+    if (chatroom.order.userId !== userId && role !== UserRole.ADMIN) throw new UnauthorizedException(`User with id: ${userId} is not authorized to view messages in this chatroom`);
     return chatroom.messages;
   }
 }

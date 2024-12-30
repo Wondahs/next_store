@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Get, Patch, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Param, ParseIntPipe, UseGuards, Post, Body } from '@nestjs/common';
 import { ChatroomService } from './chatroom.service';
 import { User } from 'src/auth/user.decorator';
 import { UserRole } from '@prisma/client';
@@ -31,5 +31,21 @@ export class ChatroomController {
     @Param('chatroomId', ParseIntPipe) chatroomId: number, 
     @User('role') role: UserRole) {
     return this.chatroomService.closeChatroom(chatroomId, role);
+  }
+
+  @Post(':chatroomId/create-message')
+  createMassage(
+    @Param('chatroomId', ParseIntPipe) chatroomId: number,
+    @User('id') userId: number,
+    @Body('message') message: string
+  ) {
+    return this.chatroomService.createMessage(chatroomId, userId, message);
+  }
+
+  @Get(':chatroomId/messages')
+  getMessages(
+    @Param('chatroomId', ParseIntPipe) chatroomId: number
+  ) {
+    return this.chatroomService.getMessages(chatroomId);
   }
 }

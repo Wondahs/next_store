@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { IsJSON, IsNotEmpty, IsNumber, IsString } from "class-validator";
 
 export class CreateOrderDto {

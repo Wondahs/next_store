@@ -11,6 +11,7 @@ export class OrdersService {
   async createOrder(userId: number, createOrderDto: CreateOrderDto) {
     // Create a new order and its associated chatroom in a transaction
     const order = await this.prisma.$transaction(async (prisma) => {
+      // create new order
       const newOrder = await prisma.order.create({
         data: {
           description: createOrderDto.description,
@@ -21,14 +22,14 @@ export class OrdersService {
         },
       });
 
-      await prisma.chatroom.create({
+      const chatroom = await prisma.chatroom.create({
         data: {
           orderId: newOrder.id,
           isClosed: false,
         },
       });
 
-      return newOrder;
+      return {newOrder, chatroom};
     });
 
     return order;

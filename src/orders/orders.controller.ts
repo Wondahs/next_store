@@ -27,6 +27,15 @@ export class OrdersController {
     return this.ordersService.getUserOrders(userid, role);
   }
 
+  @Get(':id')
+  findOrder(
+    @Param('id', ParseIntPipe) id: number,
+    @User('id') userid: number,
+    @User('role') role: string
+  ) {
+    return this.ordersService.getOneOrder(id, userid, role);
+  }
+
   @Patch(':id/status')
   updateStatus(
     @Param('id', ParseIntPipe) orderId: number,

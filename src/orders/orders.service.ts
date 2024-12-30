@@ -50,6 +50,23 @@ export class OrdersService {
     });
   }
 
+  async getOneOrder(id: number, userId: number, role: string) {
+    if (role === 'ADMIN') {
+      return this.prisma.order.findUnique({
+        where: { id },
+        include: { chatroom: true },
+      });
+    }
+
+    return this.prisma.order.findUnique({
+      where: {
+        userId,
+        id,
+      },
+      include: { chatroom: true },
+    });
+  }
+
   async updateOrderStatus(orderId: number, status: OrderStatus, userRole: string) {
     // Throw error if user isn't an admin
     if (userRole !== 'ADMIN') {

@@ -7,13 +7,17 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { OrdersModule } from './orders/orders.module';
+import { ChatroomModule } from './chatroom/chatroom.module';
+import { MessageModule } from './message/message.module';
 
 @Module({
   imports: [PrismaModule, AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    OrdersModule
+    OrdersModule,
+    ChatroomModule,
+    MessageModule
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

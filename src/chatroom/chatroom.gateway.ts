@@ -27,16 +27,16 @@ export class ChatroomGateway {
       const payload = this.jwtService.verify(token);
       client.data.user = payload;
 
-      const chatroomId =  parseInt(client.handshake.query.chatroomId as string);
-      const chatroom = this.prisma.chatroom.findUnique({
-        where: { id: chatroomId },
-        include: {
-          order: true,
-          messages: true
-        }
-      })
+    //   const chatroomId =  parseInt(client.handshake.query.chatroomId as string);
+    //   const chatroom = this.prisma.chatroom.findUnique({
+    //     where: { id: chatroomId },
+    //     include: {
+    //       order: true,
+    //       messages: true
+    //     }
+    //   })
 
-      if (!chatroom) throw new UnauthorizedException();
+    //   if (!chatroom) throw new UnauthorizedException();
     } catch {
       client.disconnect();
     }

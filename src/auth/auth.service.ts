@@ -4,6 +4,7 @@ import { LoginDto, RegisterDto } from './dto/create-auth.dto';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
+import { UserRole } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -65,5 +66,13 @@ export class AuthService {
     return {
       access_token: this.jwtservice.sign(payload),
     }
+  }
+
+  
+  async users(
+    role: UserRole
+  ) {
+    if (role !== UserRole.ADMIN) throw new UnauthorizedException("You do not have authentication for this action");
+    return await this.prisma.user.findMany();
   }
 }

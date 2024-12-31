@@ -1,20 +1,22 @@
-// src/chatroom/chatroom.gateway.ts
+/* eslint-disable prettier/prettier */
 import { WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody, ConnectedSocket } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { ChatroomService } from './chatroom.service';
 import { UnauthorizedException } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @WebSocketGateway({
   cors: true,
-  namespace: 'chatroom'
+  namespace: 'chat'
 })
 export class ChatroomGateway {
   @WebSocketServer() server: Server;
   
   constructor(
     private chatroomService: ChatroomService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private prisma: PrismaService
   ) {}
 
   async handleConnection(client: Socket) {
@@ -24,6 +26,17 @@ export class ChatroomGateway {
       
       const payload = this.jwtService.verify(token);
       client.data.user = payload;
+
+      const chatroomId =  parseInt(client.handshake.query.chatroomId as string);
+      const chatroom = this.prisma.chatroom.findUnique({
+        where: { id: chatroomId },
+        include: {
+          order: true,
+          messages: true
+        }
+      })
+
+      if (!chatroom) throw new UnauthorizedException();
     } catch {
       client.disconnect();
     }

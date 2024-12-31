@@ -21,8 +21,13 @@ export class ChatroomGateway {
 
   async handleConnection(client: Socket) {
     try {
-      const token = client.handshake.auth.token?.split(' ')[1];
-      if (!token) throw new UnauthorizedException();
+        console.log(client.handshake);
+      const authToken = client.handshake.headers.auth as string;
+        const token = authToken.split(' ')[1];
+      if (!token) {
+        console.log('No token found');
+        throw new UnauthorizedException();
+    }
       
       const payload = this.jwtService.verify(token);
       client.data.user = payload;

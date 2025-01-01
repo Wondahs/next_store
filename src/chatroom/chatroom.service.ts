@@ -8,15 +8,21 @@ export class ChatroomService {
   constructor(private prisma: PrismaService) { }
 
   async findAllChatrooms(
-    role: UserRole
+    role: UserRole,
+    userId: number
   ) {
-    if (role !== UserRole.ADMIN) throw new UnauthorizedException("Only admins can see all chatrooms")
-    return await this.prisma.chatroom.findMany({
+    const chatrooms = role === UserRole.ADMIN ?
+     await this.prisma.chatroom.findMany({
       include: {
         order: true,
         messages: true
-      }
-  });
+      }}
+    ) :
+    await this.prisma.chatroom.findMany({
+      where: { id: userId}
+    });
+
+    return chatrooms;
   }
 
   async findOneChatroom(

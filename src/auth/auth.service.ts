@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { LoginDto, RegisterDto } from './dto/create-auth.dto';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -31,7 +31,7 @@ export class AuthService {
     } catch (error) {
       // Catch error related to multiple registration of a single email
       if (error.code === 'P2002') {
-        throw new UnauthorizedException('Email already exists');
+        throw new ConflictException('Email already exists');
       }
       throw new UnauthorizedException('Invalid credentials');
     }

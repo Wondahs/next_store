@@ -12,9 +12,10 @@ export class ChatroomController {
 
   @Get()
   findAll(
-    @User('role') role: UserRole
+    @User('role') role: UserRole,
+    @User('id') userId
   ) {
-    return this.chatroomService.findAllChatrooms(role);
+    return this.chatroomService.findAllChatrooms(role, userId);
   }
 
   @Get(':chatroomId')

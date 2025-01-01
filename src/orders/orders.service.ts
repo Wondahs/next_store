@@ -2,7 +2,7 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, UserRole } from '@prisma/client';
 
 @Injectable()
 export class OrdersService {
@@ -24,6 +24,7 @@ export class OrdersService {
 
       const chatroom = await prisma.chatroom.create({
         data: {
+          userId,
           orderId: newOrder.id,
           isClosed: false,
         },
@@ -36,7 +37,7 @@ export class OrdersService {
   }
 
   async getUserOrders(userId: number, role: string) {
-    if (role === 'ADMIN') {
+    if (role === UserRole.ADMIN) {
       return this.prisma.order.findMany({
         include: { chatroom: true },
       });

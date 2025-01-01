@@ -10,7 +10,7 @@ export class ChatroomService {
   async findAllChatrooms(
     role: UserRole
   ) {
-    if (role !== "ADMIN") throw new UnauthorizedException("Only admins can see all chatrooms")
+    if (role !== UserRole.ADMIN) throw new UnauthorizedException("Only admins can see all chatrooms")
     return await this.prisma.chatroom.findMany({
       include: {
         order: true,
@@ -27,12 +27,11 @@ export class ChatroomService {
     const chatroom = await this.prisma.chatroom.findUnique({
       where: { id: chatroomId },
       include: {
-        order: true,
         messages: true
       }
     })
     if (!chatroom) throw new NotFoundException(`Chatroom with id ${chatroomId} not found`);
-    if (chatroom.order.userId !== userId && role !== "ADMIN") throw new UnauthorizedException(`User with id: ${userId} is not authorized to view this chatroom`);
+    if (chatroom.userId !== userId && role !== "ADMIN") throw new UnauthorizedException(`User with id: ${userId} is not authorized to view this chatroom`);
     return chatroom;
   }
 
@@ -40,7 +39,7 @@ export class ChatroomService {
     chatroomId: number,
     role: UserRole,
   ) {
-    if (role !== "ADMIN") throw new UnauthorizedException("Only Admins are authorized to close chatrooms");
+    if (role !== UserRole.ADMIN) throw new UnauthorizedException("Only Admins are authorized to close chatrooms");
 
     try {
       const chatroom = await this.prisma.chatroom.update({
@@ -65,13 +64,10 @@ export class ChatroomService {
     message: string
   ) {
     const chatroom = await this.prisma.chatroom.findUnique({
-      where: { id: chatroomId },
-      include: {
-        order: true,
-      }
+      where: { id: chatroomId }
     });
     if (!chatroom) throw new NotFoundException(`Chatroom with id ${chatroomId} not found`);
-    if (chatroom.order.userId !== userId && role !== UserRole.ADMIN) throw new UnauthorizedException(`User with id: ${userId} is not authorized to send messages to this chatroom`);
+    if (chatroom.userId !== userId && role !== UserRole.ADMIN) throw new UnauthorizedException(`User with id: ${userId} is not authorized to send messages to this chatroom`);
     if (chatroom.isClosed) throw new ConflictException(`Chatroom with id ${chatroomId} is closed`);
 
     return await this.prisma.message.create({

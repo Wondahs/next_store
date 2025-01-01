@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket Chat Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    #messages {
+      border: 1px solid #ccc;
+      padding: 10px;
+      height: 300px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px 0;
+    }
+    input {
+      width: calc(100% - 20px);
+    }
+  </style>
+</head>
+<body>
+  <h1>Nest Store WebSocket Chat Test (Admin)</h1>
+  <div id="messages"></div>
+  <input type="text" id="messageInput" placeholder="Type your message here..." />
+  <button id="sendBtn">Send Message</button>
+
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+  <script>
+    // Replace with your WebSocket server details
+    const chatroomId = 1; // Example chatroom ID
+    const authToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjIsImVtYWlsIjoiYWRtaW5AZ21haWwuY29tIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzM1NzI1NTkxLCJleHAiOjE3MzU4MTE5OTF9.ZGzJSpFkBexwRik1wLkudUGwxhX1m41Coo227LiNlAU'; // Replace with your token
+    const socket = io('http://localhost:3000/chat', {
+      query: { chatroomId },
+      extraHeaders: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+
+    const messagesDiv = document.getElementById('messages');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    // Handle connection
+    socket.on('connect', () => {
+      addMessage('Connected to Nest Store WebSocket server as admin.');
+    });
+
+    // Handle new messages
+    socket.on('sendMessage', (message) => {
+      addMessage(`User: ${message}`);
+    });
+
+    // Handle errors
+    socket.on('error', (error) => {
+      addMessage(`Error: ${error}`);
+    });
+
+    // Handle disconnection
+    socket.on('disconnect', () => {
+      addMessage('Disconnected from server.');
+    });
+
+    // Send message
+    sendBtn.addEventListener('click', () => {
+      const message = messageInput.value.trim();
+      if (message) {
+        socket.emit('sendMessage', { message });
+        addMessage(`Admin: ${message}`);
+        messageInput.value = '';
+      }
+    });
+
+    // Helper to add messages to the UI
+    function addMessage(message) {
+      const msgDiv = document.createElement('div');
+      msgDiv.textContent = message;
+      messagesDiv.appendChild(msgDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+  </script>
+
+  <!-- Include Socket.IO client -->
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</body>
+</html>

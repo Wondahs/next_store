@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ChatroomService } from './chatroom.service';
 import { UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UserRole } from '@prisma/client';
 
 @WebSocketGateway({
   cors: true,
@@ -12,79 +13,74 @@ import { PrismaService } from 'src/prisma/prisma.service';
 })
 export class ChatroomGateway {
   @WebSocketServer() server: Server;
-  
+  chatroomId: number
+
   constructor(
     private chatroomService: ChatroomService,
     private jwtService: JwtService,
     private prisma: PrismaService
-  ) {}
+  ) { }
 
   async handleConnection(client: Socket) {
     try {
-        console.log(client.handshake);
-      const authToken = client.handshake.headers.auth as string;
-        const token = authToken.split(' ')[1];
+      // Get chatroom using chatroomid parameter
+      this.chatroomId = parseInt(client.handshake.query.chatroomId as string);
+      if (!this.chatroomId) {
+        throw new Error("chatroomid missing")
+      }
+      const chatroom = await this.prisma.chatroom.findUnique({
+        where: { id: this.chatroomId },
+        include: {
+          messages: true,
+          user: true,
+        }
+      })
+      // console.log(chatroom);
+      if (!chatroom) throw new UnauthorizedException(`Chatroom with id ${this.chatroomId} does not exist`);
+      
+      // Check for auth token
+      // console.log(client.handshake);
+      const authToken = client.handshake.headers.auth as string || client.handshake.headers.authorization as string;
+      const token = authToken ? authToken.split(' ')[1] : "";
       if (!token) {
         console.log('No token found');
-        throw new UnauthorizedException();
-    }
-      
+        throw new UnauthorizedException("No or invalid token");
+      }
+
+      // Verify token and get userId
       const payload = this.jwtService.verify(token);
+      // console.log(payload);
       client.data.user = payload;
+      const userId = payload.sub;
+      // console.log(chatroom.user);
 
-    //   const chatroomId =  parseInt(client.handshake.query.chatroomId as string);
-    //   const chatroom = this.prisma.chatroom.findUnique({
-    //     where: { id: chatroomId },
-    //     include: {
-    //       order: true,
-    //       messages: true
-    //     }
-    //   })
-
-    //   if (!chatroom) throw new UnauthorizedException();
-    } catch {
+      // check if user has access to room
+      if (payload.role !== UserRole.ADMIN && userId !== chatroom.userId) throw new UnauthorizedException("You are not authorized to view this room");
+    } catch(error) {
+      client.emit("error", error.message);
       client.disconnect();
-    }
-  }
-
-  @SubscribeMessage('joinRoom')
-  async handleJoinRoom(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() chatroomId: number
-  ) {
-    const { sub: userId, role } = client.data.user;
-    
-    try {
-      // Verify access using existing service
-      await this.chatroomService.findOneChatroom(role, chatroomId, userId);
-      client.join(`room_${chatroomId}`);
-      
-      // Get existing messages
-      const messages = await this.chatroomService.getMessages(chatroomId, userId, role);
-      return { messages };
-    } catch (error) {
-      client.emit('error', error.message);
     }
   }
 
   @SubscribeMessage('sendMessage')
   async handleMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { chatroomId: number, message: string }
+    @MessageBody() data: { message: string }
   ) {
     const { sub: userId, role } = client.data.user;
-    
+    const msgBody = data.message || data
+    console.log("Data: ", data.message);
     try {
       // Save message to DB using existing service
       const savedMessage = await this.chatroomService.createMessage(
-        data.chatroomId,
+        this.chatroomId,
         userId,
         role,
-        data.message
+        msgBody as string
       );
-      
+
       // Broadcast to room
-      this.server.to(`room_${data.chatroomId}`).emit('newMessage', savedMessage);
+      client.broadcast.emit('sendMessage', msgBody);
     } catch (error) {
       client.emit('error', error.message);
     }

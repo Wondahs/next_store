@@ -5,7 +5,7 @@ import { User } from 'src/auth/user.decorator';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
-@Controller('chatroom')
+@Controller('chatrooms')
 @UseGuards(JwtAuthGuard)
 export class ChatroomController {
   constructor(private readonly chatroomService: ChatroomService) {}
@@ -13,7 +13,7 @@ export class ChatroomController {
   @Get()
   findAll(
     @User('role') role: UserRole,
-    @User('id') userId
+    @User('id') userId: number
   ) {
     return this.chatroomService.findAllChatrooms(role, userId);
   }

@@ -12,15 +12,20 @@ export class ChatroomService {
     userId: number
   ) {
     const chatrooms = role === UserRole.ADMIN ?
-     await this.prisma.chatroom.findMany({
-      include: {
-        order: true,
-        messages: true
-      }}
-    ) :
-    await this.prisma.chatroom.findMany({
-      where: { id: userId}
-    });
+      await this.prisma.chatroom.findMany({
+        include: {
+          order: true,
+          messages: true
+        }
+      }
+      ) :
+      await this.prisma.chatroom.findMany({
+        where: { userId },
+        include: {
+          order: true,
+          messages: true
+        }
+      });
 
     return chatrooms;
   }

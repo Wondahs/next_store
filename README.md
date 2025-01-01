@@ -1,99 +1,142 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# **Nest Store**
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+**Nest Store** is a backend application designed to facilitate **order management** and **real-time communication** between users and admins. It provides a comprehensive API that supports **user authentication**, **order management**, and **chatroom messaging** via WebSocket.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## **Features**
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **User Authentication**: Secure user registration and login with JWT tokens.
+- **Order Management**: Admins and users can create, view, and manage orders.
+- **Real-Time Chatrooms**: Admins and users can interact through real-time WebSocket connections in dedicated chatrooms linked to orders.
+- **Role-Based Access Control**: Differentiates user access between **ADMIN** and **USER** roles for endpoints.
 
-## Project setup
+---
 
-```bash
-$ npm install
-```
+## **Tech Stack**
 
-## Compile and run the project
+- **Backend**:  
+  - **NestJS**: Framework for building efficient, scalable Node.js applications.
+  - **Prisma**: ORM for database interactions.
+  - **Socket.IO**: For real-time communication between the server and clients.
+  - **JWT**: For secure user authentication.
 
-```bash
-# development
-$ npm run start
+- **Database**:  
+  - **MySQL** (or other relational database)
 
-# watch mode
-$ npm run start:dev
+---
 
-# production mode
-$ npm run start:prod
-```
+## **API Endpoints**
 
-## Run tests
+### **Authentication**
+- **POST** `/auth/register`: Register a new user with email, password, and role (admin or user).
+- **POST** `/auth/login`: Log in an existing user with email and password, receiving a JWT token.
+- **GET** `/users`: Get all users (admin only).
+- **GET** `/users/:id`: Get a specific user by ID (admin only).
 
-```bash
-# unit tests
-$ npm run test
+### **Orders**
+- **POST** `/orders`: Create a new order (authenticated users).
+- **GET** `/orders`: View all orders (users only see their own, admins see all).
+- **GET** `/orders/:id`: View a specific order.
+- **PATCH** `/orders/:id/status`: Update the status of an order (admin only).
 
-# e2e tests
-$ npm run test:e2e
+### **Chatrooms**
+- **GET** `/chatroom`: Get all chatrooms (users only see their own, admins see all).
+- **GET** `/chatroom/:chatroomId`: View a specific chatroom.
+- **PATCH** `/chatroom/:chatroomId/close`: Close a chatroom (admin only).
+- **POST** `/chatroom/:chatroomId/create-message`: Send a message in a chatroom (user and admin).
+- **GET** `/chatroom/:chatroomId/messages`: Get all messages in a specific chatroom.
 
-# test coverage
-$ npm run test:cov
-```
+---
 
-## Deployment
+## **WebSocket Communication**
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+- **Namespace**: `/chat`
+- **Events**:
+  - **sendMessage**: Used to send messages in the chatroom.
+  - **error**: Emitted when an error occurs in the WebSocket communication.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+---
 
-```bash
-$ npm install -g mau
-$ mau deploy
-```
+## **Running the Project Locally**
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### **Prisma Setup**
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-## Resources
+2. Set up your `.env` file with the correct database URL:
+   ```bash
+   DATABASE_URL="your-database-connection-url"
+   ```
 
-Check out a few resources that may come in handy when working with NestJS:
+3. Run Prisma migrations to set up your database:
+   ```bash
+   npx prisma migrate deploy
+   ```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+4. Seed your database if needed:
+   ```bash
+   npx prisma db seed
+   ```
 
-## Support
+### **Start the Application**
+1. Start the application locally:
+   ```bash
+   npm run start:dev
+   ```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+2. The application will run on `http://localhost:3000`.
 
-## Stay in touch
+---
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## **Testing**
 
-## License
+Use Postman to test the API endpoints. The documentation for the endpoints is available **[here]([insert-link-to-postman-collection](https://documenter.getpostman.com/view/37830700/2sAYJ7geRy))**.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+### **Testing WebSocket Connection**
+
+You can easily test the WebSocket connection using the HTML files provided in the project.
+
+### **Steps to Test:**
+
+1. Navigate to the ./test_html folder in the project directory.
+2. Open the provided **HTML files** in your browser.
+3. Locate the **script section** in the HTML file where the WebSocket connection is set up.
+4. **Add your Auth Token and ChatroomID** in the script, replacing the placeholder with your valid JWT token and a valid chatroomID.
+   
+   Example:
+   ```javascript
+       const chatroomId = 1; // Example chatroom ID
+    const authToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjIsImVtYWlsIjoiYWRtaW5AZ21haWwuY29tIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzM1NzI1NTkxLCJleHAiOjE3MzU4MTE5OTF9.ZGzJSpFkBexwRik1wLkudUGwxhX1m41Coo227LiNlAU'; // Replace with your token
+    const socket = io('http://localhost:3000/chat', {
+      query: { chatroomId },
+      extraHeaders: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+   ```
+
+5. After adding the token, you can interact with the WebSocket server by sending messages in the chatroom.
+6. You will receive real-time updates in the chatroom, and you can also test the `sendMessage` event to ensure it works properly.
+
+This allows you to simulate real-time messaging and test the WebSocket functionality before integrating it into your frontend application.
+
+---
+
+## **Contributing**
+
+We welcome contributions to the project! Please fork the repository, create a feature branch, and submit a pull request.
+
+---
+
+## **To-Do**
+
+- [ ] Set up **Error Logging** and **Monitoring** for better debugging.
+- [ ] Add **Unit Tests** for chatroom and order management services.
+- [ ] Create **Admin Dashboard** for order management and user management.
+- [ ] Improve **WebSocket UI** to better handle real-time messaging for users and admins.
+- [ ] Write **User Documentation** for API usage and WebSocket integration.
+- [ ] Integrate **Frontend** application to interact with API endpoints.

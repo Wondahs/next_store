@@ -6,7 +6,10 @@ import { UserRole } from '@prisma/client';
 import { INestApplication } from '@nestjs/common';
 import { AuthService } from '../src/auth/auth.service';
 import { PrismaService } from '../src/prisma/prisma.service';
-import { JwtService } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
+import { PrismaModule } from '../src/prisma/prisma.module';
+import { PassportModule } from '@nestjs/passport';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 describe('AuthController (e2e)', () => {
   console.log("Starting Auth test");
@@ -33,6 +36,16 @@ describe('AuthController (e2e)', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [AuthService, PrismaService, JwtService],
+      imports: [PrismaModule, PassportModule,
+          JwtModule.registerAsync({
+            imports: [ConfigModule],
+            inject: [ConfigService],
+            useFactory: (configService: ConfigService) => ({
+              secret: configService.get<string>('JWT_SECRET'),
+              signOptions: { expiresIn: '1d' },
+            }),
+          })
+        ]
     }).compile();
 
     app = module.createNestApplication();

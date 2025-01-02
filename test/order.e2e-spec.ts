@@ -40,7 +40,7 @@ describe('OrderController (e2e)', () => {
       size: 'large',
     }
   }
-  
+
   const user2Order = {
     description: 'Order 2',
     quantity: 2,
@@ -136,11 +136,11 @@ describe('OrderController (e2e)', () => {
     const response = await request(app.getHttpServer())
       .post('/orders')
       .expect(401);
-  
+
     expect(response.body).toHaveProperty('statusCode', 401);
     expect(response.body.message).toEqual('Unauthorized');
   });
-  
+
 
   it('regular users should login with valid credentials and return a JWT token', async () => {
 
@@ -151,8 +151,8 @@ describe('OrderController (e2e)', () => {
         password: testUser.password,
       })
       .expect(201);
-    
-      user1AuthToken = response.body.access_token;
+
+    user1AuthToken = response.body.access_token;
 
     expect(response.body).toHaveProperty('access_token');
     expect(typeof response.body.access_token).toBe('string');
@@ -164,13 +164,13 @@ describe('OrderController (e2e)', () => {
         password: testUser2.password,
       })
       .expect(201);
-    
-      user2AuthToken = response2.body.access_token;
+
+    user2AuthToken = response2.body.access_token;
 
     expect(response2.body).toHaveProperty('access_token');
     expect(typeof response2.body.access_token).toBe('string');
   });
-  
+
   it('admin should login with valid credentials and return a JWT token', async () => {
 
     const response = await request(app.getHttpServer())
@@ -180,13 +180,13 @@ describe('OrderController (e2e)', () => {
         password: adminUser.password,
       })
       .expect(201);
-    
-      adminAuthToken = response.body.access_token;
+
+    adminAuthToken = response.body.access_token;
 
     expect(response.body).toHaveProperty('access_token');
     expect(typeof response.body.access_token).toBe('string');
   });
-  
+
   it('user1 should create an order', async () => {
 
     const response = await request(app.getHttpServer())
@@ -194,14 +194,47 @@ describe('OrderController (e2e)', () => {
       .send(user1Order)
       .set('Authorization', `Bearer ${user1AuthToken}`)
       .expect(201);
-    
 
-      console.log("User1 Order response: ", response.body);
-      user1OrderId = response.body.id;
 
-      expect(typeof response.body).toBe('object');
+    // console.log("User1 Order response: ", response.body);
+    user1OrderId = response.body.newOrder.id;
+
+    expect(typeof response.body).toBe('object');
     expect(response.body).toHaveProperty('newOrder');
     expect(response.body).toHaveProperty('chatroom');
+  });
+
+  it('user2 should create an order', async () => {
+
+    const response = await request(app.getHttpServer())
+      .post('/orders')
+      .send(user2Order)
+      .set('Authorization', `Bearer ${user1AuthToken}`)
+      .expect(201);
+
+
+    // console.log("User1 Order response: ", response.body);
+    user2OrderId = response.body.newOrder.id;
+
+    expect(typeof response.body).toBe('object');
+    expect(response.body).toHaveProperty('newOrder');
+    expect(response.body).toHaveProperty('chatroom');
+  });
+
+  it('user1 should see only their orders', async () => {
+
+    const response = await request(app.getHttpServer())
+      .get('/orders')
+      .set('Authorization', `Bearer ${user1AuthToken}`)
+      .expect(201);
+
+
+    console.log("User1 Order response: ", response.body);
+    user2OrderId = response.body.newOrder.id;
+
+    expect(typeof response.body).toBe('array');
+    expect(response.body.length).toBe(1);
+    expect(response.body[1].id).toHaveProperty('id', user1OrderId);
   });
 
 

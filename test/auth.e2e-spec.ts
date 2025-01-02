@@ -77,6 +77,17 @@ describe('AuthController (e2e)', () => {
     expect(response.body.role).toEqual(testUser.role);
   });
 
+  it('should register a new Admin and return user data', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(adminUser)
+      .expect(201);
+
+    expect(response.body).toHaveProperty('id');
+    expect(response.body.email).toEqual(adminUser.email);
+    expect(response.body.role).toEqual(adminUser.role);
+  });
+
   it('should return an error when trying to register again with same email', async () => {
     const response = await request(app.getHttpServer())
       .post('/auth/register')
@@ -113,7 +124,7 @@ describe('AuthController (e2e)', () => {
     expect(typeof response.body.access_token).toBe('string');
   });
 
-  it('should login in and access protected routes with JWT token', async () => {
+  it('regular user should login in and fail to access protected routes with JWT token', async () => {
 
     const response = await request(app.getHttpServer())
       .post('/auth/login')
@@ -124,13 +135,40 @@ describe('AuthController (e2e)', () => {
       .expect(201);
 
     const token = response.body.access_token;
+    // console.log(token);
+    // const decoded = require('jsonwebtoken').decode(token);
+    // console.log('Decoded token:' , decoded);
+
+    const loginWithToken = await request(app.getHttpServer())
+      .get('/auth/users')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(401);
+
+      expect(loginWithToken.body).toHaveProperty('statusCode', 401);
+      expect(loginWithToken.body.message).toEqual('You do not have authentication for this action');
+  });
+
+  it('Admin should login in and access protected routes with JWT token', async () => {
+
+    const response = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        email: adminUser.email,
+        password: adminUser.password,
+      })
+      .expect(201);
+
+    const token = response.body.access_token;
+    // console.log(token);
+    // const decoded = require('jsonwebtoken').decode(token);
+    // console.log('Decoded token:' , decoded);
 
     const loginWithToken = await request(app.getHttpServer())
       .get('/auth/users')
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
-    expect(loginWithToken.body).toHaveProperty('access_token');
+      expect(loginWithToken.body).toBeInstanceOf(Array);
   });
 
   afterAll(async () => {

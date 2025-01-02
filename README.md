@@ -102,15 +102,18 @@ You can easily test the WebSocket connection using the HTML files provided in th
 
 ### **Steps to Test:**
 
-1. Navigate to the ./test_html folder in the project directory.
-2. Open the provided **HTML files** in your browser.
-3. Locate the **script section** in the HTML file where the WebSocket connection is set up.
-4. **Add your Auth Token and ChatroomID** in the script, replacing the placeholder with your valid JWT token and a valid chatroomID.
+1. Start the application
+2. Create two users - one admin and one user.
+3. Login and generate auth tokens for both users.
+4. Navigate to the [`./test_html`](./test_html/) folder in the project directory.
+5. Open the provided **HTML files** in your browser. User in one tab, Admin in the other.
+6. Locate the **script section** in the HTML file where the WebSocket connection is set up.
+7. **Add your Auth Tokens and ChatroomID** in the script, replacing the placeholder with your valid JWT token and a valid chatroomID. Place user token in the user HTML and admin token in the admin HTML file.
    
    Example:
    ```javascript
-       const chatroomId = 1; // Example chatroom ID
-    const authToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjIsImVtYWlsIjoiYWRtaW5AZ21haWwuY29tIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzM1NzI1NTkxLCJleHAiOjE3MzU4MTE5OTF9.ZGzJSpFkBexwRik1wLkudUGwxhX1m41Coo227LiNlAU'; // Replace with your token
+    const chatroomId = 1; // Example chatroom ID
+    const authToken = 'eyJhbGciOiJIUz...'; // Replace with your AUTH token
     const socket = io('http://localhost:3000/chat', {
       query: { chatroomId },
       extraHeaders: {
@@ -119,8 +122,8 @@ You can easily test the WebSocket connection using the HTML files provided in th
     });
    ```
 
-5. After adding the token, you can interact with the WebSocket server by sending messages in the chatroom.
-6. You will receive real-time updates in the chatroom, and you can also test the `sendMessage` event to ensure it works properly.
+8. After adding the token, you can interact with the WebSocket server by sending messages in the chatroom.
+9. You will receive real-time updates in the chatroom, and you can also test the `sendMessage` event to ensure it works properly.
 
 This allows you to simulate real-time messaging and test the WebSocket functionality before integrating it into your frontend application.
 
@@ -128,7 +131,8 @@ This allows you to simulate real-time messaging and test the WebSocket functiona
 
 ## **Contributing**
 
-We welcome contributions to the project! Please fork the repository, create a feature branch, and submit a pull request.
+I welcome contributions to the project!
+Please fork the repository, create a feature branch, and submit a pull request.
 
 ---
 
@@ -138,5 +142,5 @@ We welcome contributions to the project! Please fork the repository, create a fe
 - [ ] Add **Unit Tests** for chatroom and order management services.
 - [ ] Create **Admin Dashboard** for order management and user management.
 - [ ] Improve **WebSocket UI** to better handle real-time messaging for users and admins.
-- [ ] Write **User Documentation** for API usage and WebSocket integration.
 - [ ] Integrate **Frontend** application to interact with API endpoints.
+- [ ] 

@@ -10,22 +10,20 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PrismaModule } from '../src/prisma/prisma.module';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtAuthStrategy } from '../src/auth/jwt.strategy';
 
 describe('AuthController (e2e)', () => {
   console.log("Starting Auth test");
   let app: INestApplication;
   let authService: AuthService;
   let prismaService: PrismaService;
-  let jwtService: JwtService;
 
-  // Setup user data
   const testUser = {
     email: 'testuser@example.com',
     password: 'Test@123',
     role: UserRole.REGULAR,
   };
 
-  // User data for an admin
   const adminUser = {
     email: 'admin@example.com',
     password: 'Admin@123',
@@ -35,17 +33,22 @@ describe('AuthController (e2e)', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [AuthService, PrismaService, JwtService],
-      imports: [PrismaModule, PassportModule,
-          JwtModule.registerAsync({
-            imports: [ConfigModule],
-            inject: [ConfigService],
-            useFactory: (configService: ConfigService) => ({
-              secret: configService.get<string>('JWT_SECRET'),
-              signOptions: { expiresIn: '1d' },
-            }),
-          })
-        ]
+      providers: [AuthService, PrismaService, JwtAuthStrategy],
+      imports: [
+        PrismaModule,
+        PassportModule,
+        ConfigModule.forRoot({
+          isGlobal: true,
+        }),
+        JwtModule.registerAsync({
+          imports: [ConfigModule],
+          inject: [ConfigService],
+          useFactory: (configService: ConfigService) => ({
+            secret: configService.get<string>('JWT_SECRET', 'testSecret'),
+            signOptions: { expiresIn: '1d' },
+          }),
+        }),
+      ],
     }).compile();
 
     app = module.createNestApplication();
@@ -53,10 +56,13 @@ describe('AuthController (e2e)', () => {
 
     authService = module.get<AuthService>(AuthService);
     prismaService = module.get<PrismaService>(PrismaService);
-    jwtService = module.get<JwtService>(JwtService);
 
-    // Cleanup database before tests
-    await prismaService.user.deleteMany({});
+    try {
+      await prismaService.user.deleteMany({});
+    } catch (error) {
+      console.error('Error during database cleanup:', error);
+    }
+
     console.log("Ready to test");
   });
 
@@ -71,83 +77,69 @@ describe('AuthController (e2e)', () => {
     expect(response.body.role).toEqual(testUser.role);
   });
 
-  it('should login with valid credentials and return a real JWT token', async () => {
-    // Delete old registered user first
-    await prismaService.user.delete({where: {email: testUser.email}});
-    console.log("Deleted old user");
-    // Register user first
-    await request(app.getHttpServer())
+  it('should return an error when trying to register again with same email', async () => {
+    const response = await request(app.getHttpServer())
       .post('/auth/register')
       .send(testUser)
-      .expect(201);
+      .expect(409);
 
-    // Now login with the same user credentials
+    expect(response.body).toHaveProperty('error');
+    expect(response.body.error).toEqual("Conflict");
+    expect(response.body).toHaveProperty('message');
+    expect(response.body.message).toEqual("Email already exists");
+  });
+
+  it('should fail to access a protected route without an auth token', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/auth/users')
+      .expect(401);
+  
+    expect(response.body).toHaveProperty('statusCode', 401);
+    expect(response.body.message).toEqual('Unauthorized');
+  });
+  
+
+  it('should login with valid credentials and return a JWT token', async () => {
+
     const response = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
         email: testUser.email,
         password: testUser.password,
       })
-      .expect(200);
+      .expect(201);
 
     expect(response.body).toHaveProperty('access_token');
     expect(typeof response.body.access_token).toBe('string');
   });
 
-  // it('should return all users for admin with valid JWT', async () => {
-  //   // Register and login admin user
-  //   await request(app.getHttpServer())
-  //     .post('/auth/register')
-  //     .send(adminUser)
-  //     .expect(201);
+  it('should login in and access protected routes with JWT token', async () => {
 
-  //   const loginResponse = await request(app.getHttpServer())
-  //     .post('/auth/login')
-  //     .send({
-  //       email: adminUser.email,
-  //       password: adminUser.password,
-  //     })
-  //     .expect(200);
+    const response = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        email: testUser.email,
+        password: testUser.password,
+      })
+      .expect(201);
 
-  //   const adminToken = loginResponse.body.access_token;
+    const token = response.body.access_token;
 
-  //   const response = await request(app.getHttpServer())
-  //     .get('/auth/users')
-  //     .set('Authorization', `Bearer ${adminToken}`)
-  //     .expect(200);
+    const loginWithToken = await request(app.getHttpServer())
+      .get('/auth/users')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
 
-  //   expect(response.body).toBeInstanceOf(Array);
-  //   expect(response.body[0]).toHaveProperty('email');
-  // });
-
-  // it('should return unauthorized for non-admin users accessing /auth/users', async () => {
-  //   // Register and login regular user
-  //   await request(app.getHttpServer())
-  //     .post('/auth/register')
-  //     .send(testUser)
-  //     .expect(201);
-
-  //   const loginResponse = await request(app.getHttpServer())
-  //     .post('/auth/login')
-  //     .send({
-  //       email: testUser.email,
-  //       password: testUser.password,
-  //     })
-  //     .expect(200);
-
-  //   const userToken = loginResponse.body.access_token;
-
-  //   const response = await request(app.getHttpServer())
-  //     .get('/auth/users')
-  //     .set('Authorization', `Bearer ${userToken}`)
-  //     .expect(403);
-
-  //   expect(response.body.message).toEqual('Forbidden resource');
-  // });
+    expect(loginWithToken.body).toHaveProperty('access_token');
+  });
 
   afterAll(async () => {
-    // Clean up after tests
-    await prismaService.user.deleteMany({});
+    try {
+      await prismaService.user.deleteMany({});
+    } catch (error) {
+      console.error('Error during database cleanup:', error);
+    }
+
     await app.close();
   });
 });

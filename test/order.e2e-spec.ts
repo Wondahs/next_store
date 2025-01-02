@@ -32,6 +32,24 @@ describe('OrderController (e2e)', () => {
     role: UserRole.REGULAR,
   };
 
+  const user1Order = {
+    description: 'Order 1',
+    quantity: 2,
+    specifications: {
+      color: 'blue',
+      size: 'large',
+    }
+  }
+  
+  const user2Order = {
+    description: 'Order 2',
+    quantity: 2,
+    specifications: {
+      color: 'black',
+      size: 'small',
+    }
+  }
+
   const adminUser = {
     email: 'admin@example.com',
     password: 'Admin@123',
@@ -72,8 +90,10 @@ describe('OrderController (e2e)', () => {
     prismaService = module.get<PrismaService>(PrismaService);
 
     try {
-      await prismaService.user.deleteMany({});
+      await prismaService.message.deleteMany({});
+      await prismaService.chatroom.deleteMany({});
       await prismaService.order.deleteMany({});
+      await prismaService.user.deleteMany({});
     } catch (error) {
       console.error('Error during database cleanup:', error);
     }
@@ -166,12 +186,30 @@ describe('OrderController (e2e)', () => {
     expect(response.body).toHaveProperty('access_token');
     expect(typeof response.body.access_token).toBe('string');
   });
+  
+  it('user1 should create an order', async () => {
+
+    const response = await request(app.getHttpServer())
+      .post('/orders')
+      .send(user1Order)
+      .set('Authorization', `Bearer ${user1AuthToken}`)
+      .expect(201);
+    
+
+      console.log("User1 Order response: ", response.body);
+      user1OrderId = response.body.id;
+
+    expect(response.body).toHaveProperty('id');
+    expect(typeof response.body.access_token).toBe('object');
+  });
 
 
   afterAll(async () => {
     try {
-      await prismaService.user.deleteMany({});
+      await prismaService.message.deleteMany({});
+      await prismaService.chatroom.deleteMany({});
       await prismaService.order.deleteMany({});
+      await prismaService.user.deleteMany({});
     } catch (error) {
       console.error('Error during database cleanup:', error);
     }

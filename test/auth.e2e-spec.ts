@@ -58,7 +58,11 @@ describe('AuthController (e2e)', () => {
     prismaService = module.get<PrismaService>(PrismaService);
 
     try {
+      await prismaService.message.deleteMany({});
+      await prismaService.chatroom.deleteMany({});
+      await prismaService.order.deleteMany({});
       await prismaService.user.deleteMany({});
+
     } catch (error) {
       console.error('Error during database cleanup:', error);
     }
@@ -173,7 +177,11 @@ describe('AuthController (e2e)', () => {
 
   afterAll(async () => {
     try {
+      await prismaService.message.deleteMany({});
+      await prismaService.chatroom.deleteMany({});
+      await prismaService.order.deleteMany({});
       await prismaService.user.deleteMany({});
+
     } catch (error) {
       console.error('Error during database cleanup:', error);
     }

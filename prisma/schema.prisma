@@ -18,7 +18,7 @@ model User {
   email     String   @unique
   password  String
   role      UserRole
-  orders    Order[]
+  orders    Order[] 
   messages  Message[]
   chatrooms Chatroom[]
   createdAt DateTime @default(now())
@@ -36,7 +36,7 @@ model Order {
   specifications Json
   quantity     Int
   status       OrderStatus
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    Int
   chatroom Chatroom?
   createdAt DateTime @default(now())
@@ -56,7 +56,7 @@ model Chatroom {
   summary   String?
   user      User      @relation(fields: [userId], references: [id])
   userId    Int
-  order     Order    @relation(fields: [orderId], references: [id])
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId   Int     @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -67,7 +67,7 @@ model Message {
   content   String
   user      User     @relation(fields: [userId], references: [id])
   userId    Int
-  chatroom  Chatroom @relation(fields: [chatroomId], references: [id])
+  chatroom  Chatroom @relation(fields: [chatroomId], references: [id], onDelete: Cascade)
   chatroomId Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

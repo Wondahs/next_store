@@ -11,8 +11,10 @@ import { PrismaModule } from '../src/prisma/prisma.module';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtAuthStrategy } from '../src/auth/jwt.strategy';
+import { OrdersService } from '../src/orders/orders.service';
+import { OrdersController } from '../src/orders/orders.controller';
 
-describe('AuthController (e2e)', () => {
+describe('OrderController (e2e)', () => {
   console.log("Starting Auth test");
   let app: INestApplication;
   let authService: AuthService;
@@ -24,19 +26,28 @@ describe('AuthController (e2e)', () => {
     role: UserRole.REGULAR,
   };
 
+  const testUser2 = {
+    email: 'testuser2@example.com',
+    password: 'Test2@123',
+    role: UserRole.REGULAR,
+  };
+
   const adminUser = {
     email: 'admin@example.com',
     password: 'Admin@123',
     role: UserRole.ADMIN,
   };
 
-  let userAuthToken;
-  let adminAuthToken;
+  let user1AuthToken: string;
+  let user2AuthToken: string;
+  let adminAuthToken: string;
+  let user1OrderId: number;
+  let user2OrderId: number;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [AuthController],
-      providers: [AuthService, PrismaService, JwtAuthStrategy],
+      controllers: [AuthController, OrdersController],
+      providers: [AuthService, PrismaService, JwtAuthStrategy, OrdersService],
       imports: [
         PrismaModule,
         PassportModule,
@@ -62,6 +73,7 @@ describe('AuthController (e2e)', () => {
 
     try {
       await prismaService.user.deleteMany({});
+      await prismaService.order.deleteMany({});
     } catch (error) {
       console.error('Error during database cleanup:', error);
     }
@@ -69,15 +81,24 @@ describe('AuthController (e2e)', () => {
     console.log("Ready to test");
   });
 
-  it('should register a new user and return user data', async () => {
+  it('should register new users and return user data', async () => {
     const response = await request(app.getHttpServer())
       .post('/auth/register')
       .send(testUser)
       .expect(201);
 
+    const response2 = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(testUser2)
+      .expect(201);
+
     expect(response.body).toHaveProperty('id');
     expect(response.body.email).toEqual(testUser.email);
     expect(response.body.role).toEqual(testUser.role);
+
+    expect(response2.body).toHaveProperty('id');
+    expect(response2.body.email).toEqual(testUser2.email);
+    expect(response2.body.role).toEqual(testUser2.role);
   });
 
   it('should register a new Admin and return user data', async () => {
@@ -101,7 +122,7 @@ describe('AuthController (e2e)', () => {
   });
   
 
-  it('should login with valid credentials and return a JWT token', async () => {
+  it('regular users should login with valid credentials and return a JWT token', async () => {
 
     const response = await request(app.getHttpServer())
       .post('/auth/login')
@@ -111,7 +132,36 @@ describe('AuthController (e2e)', () => {
       })
       .expect(201);
     
-      userAuthToken = response.body.auth
+      user1AuthToken = response.body.access_token;
+
+    expect(response.body).toHaveProperty('access_token');
+    expect(typeof response.body.access_token).toBe('string');
+
+    const response2 = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        email: testUser2.email,
+        password: testUser2.password,
+      })
+      .expect(201);
+    
+      user2AuthToken = response2.body.access_token;
+
+    expect(response2.body).toHaveProperty('access_token');
+    expect(typeof response2.body.access_token).toBe('string');
+  });
+  
+  it('admin should login with valid credentials and return a JWT token', async () => {
+
+    const response = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        email: adminUser.email,
+        password: adminUser.password,
+      })
+      .expect(201);
+    
+      adminAuthToken = response.body.access_token;
 
     expect(response.body).toHaveProperty('access_token');
     expect(typeof response.body.access_token).toBe('string');
@@ -121,6 +171,7 @@ describe('AuthController (e2e)', () => {
   afterAll(async () => {
     try {
       await prismaService.user.deleteMany({});
+      await prismaService.order.deleteMany({});
     } catch (error) {
       console.error('Error during database cleanup:', error);
     }

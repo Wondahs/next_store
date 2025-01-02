@@ -15,7 +15,7 @@ import { OrdersService } from '../src/orders/orders.service';
 import { OrdersController } from '../src/orders/orders.controller';
 
 describe('OrderController (e2e)', () => {
-  console.log("Starting Auth test");
+  console.log("Starting Order test");
   let app: INestApplication;
   let authService: AuthService;
   let prismaService: PrismaService;
@@ -199,8 +199,9 @@ describe('OrderController (e2e)', () => {
       console.log("User1 Order response: ", response.body);
       user1OrderId = response.body.id;
 
-    expect(response.body).toHaveProperty('id');
-    expect(typeof response.body.access_token).toBe('object');
+      expect(typeof response.body).toBe('object');
+    expect(response.body).toHaveProperty('newOrder');
+    expect(response.body).toHaveProperty('chatroom');
   });
 
 

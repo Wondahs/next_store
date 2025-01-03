@@ -203,4 +203,3 @@ Please fork the repository, create a feature branch, and submit a pull request.
 - [ ] Create **Admin Dashboard** for order management and user management.
 - [ ] Improve **WebSocket UI** to better handle real-time messaging for users and admins.
 - [ ] Integrate **Frontend** application to interact with API endpoints.
-- [ ] 

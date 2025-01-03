@@ -66,9 +66,10 @@
    npm install
    ```
 
-2. Set up your `.env` file with the correct database URL:
+2. Set up your `.env` file with the correct database URL and JWT Secret:
    ```bash
    DATABASE_URL="your-database-connection-url"
+   JWT_SECRET=yoursecret
    ```
 
 3. Run Prisma migrations to set up your database:

@@ -43,7 +43,7 @@ export class AuthService {
       where: {email: loginDto.email},
     });
 
-    console.log(user);
+    // console.log(user);
 
     // If the user does not exist, throw an unauthorized error
     if (!user) {

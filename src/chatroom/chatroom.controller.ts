@@ -1,9 +1,9 @@
 /* eslint-disable prettier/prettier */
 import { Controller, Get, Patch, Param, ParseIntPipe, UseGuards, Post, Body } from '@nestjs/common';
 import { ChatroomService } from './chatroom.service';
-import { User } from 'src/auth/user.decorator';
+import { User } from '../auth/user.decorator';
 import { UserRole } from '@prisma/client';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('chatrooms')
 @UseGuards(JwtAuthGuard)

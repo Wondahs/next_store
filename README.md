@@ -95,6 +95,65 @@
 
 Use Postman to test the API endpoints. The documentation for the endpoints is available **[here]([insert-link-to-postman-collection](https://documenter.getpostman.com/view/37830700/2sAYJ7geRy))**.
 
+---
+
+### Running E2E Tests
+
+You can run your end-to-end (e2e) tests in two ways:
+
+1. **Run All E2E Tests:**
+   To run all the e2e tests at once for your project, use the following command:
+
+   ```bash
+   npm run test:e2e
+   ```
+
+   This will run all the test suites for the various features (Auth, Chat, Order, etc.).
+
+2. **Run Specific E2E Tests:**
+   If you want to run tests for a specific feature, you can specify the feature name. The available options are:
+   
+   - `auth`
+   - `chat`
+   - `order`
+   - `app`
+
+   To run the e2e tests for a specific feature, use the following command:
+
+   ```bash
+   npm run test:e2e <feature-name>
+   ```
+
+   Example:
+
+   - To run tests for authentication (`auth`):
+
+     ```bash
+     npm run test:e2e auth
+     ```
+
+   - To run tests for chat (`chat`):
+
+     ```bash
+     npm run test:e2e chat
+     ```
+
+   - To run tests for orders (`order`):
+
+     ```bash
+     npm run test:e2e order
+     ```
+
+   - To run tests for the app (`app`):
+
+     ```bash
+     npm run test:e2e app
+     ```
+
+---
+
+### Troubleshooting:
+- To resolve errors that may arise from database conflicts when running tests together, consider using `maxWorkers: 1` in the Jest config.
 
 ### **Testing WebSocket Connection**
 

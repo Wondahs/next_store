@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrderStatus, UserRole } from '@prisma/client';
@@ -10,6 +10,9 @@ export class OrdersService {
 
   async createOrder(userId: number, createOrderDto: CreateOrderDto) {
     // Create a new order and its associated chatroom in a transaction
+    if (!createOrderDto.description) throw new ConflictException("Description Missing")
+    if (!createOrderDto.quantity) throw new ConflictException("Quantity Missing")
+    if (!createOrderDto.specifications) throw new ConflictException("Specifications Missing")
     const order = await this.prisma.$transaction(async (prisma) => {
       // create new order
       const newOrder = await prisma.order.create({
@@ -52,12 +55,12 @@ export class OrdersService {
   }
 
   async getOneOrder(id: number, userId: number, role: string) {
-    const order = role === 'ADMIN' ?
-      await this.prisma.order.findUnique({ where: { id }, include: { chatroom: true } }) :
-      await this.prisma.order.findUnique({ where: { userId, id }, include: { chatroom: true } });
+    const order = await this.prisma.order.findUnique({ where: { id }, include: { chatroom: true } });
     if (!order) {
       throw new NotFoundException(`Order with id: ${id} not found`);
     }
+
+    if (role !== UserRole.ADMIN && order.userId !== userId) throw new UnauthorizedException("You are not authorized to see this order");
     return order;
   }
 

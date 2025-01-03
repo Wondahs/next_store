@@ -23,7 +23,7 @@ export class AuthController {
   @Get('users')
   @UseGuards(JwtAuthGuard)
   users(@User('role') role: UserRole) {
-    console.log(role);
+    // console.log(role);
     return this.authService.users(role);
   }
 }

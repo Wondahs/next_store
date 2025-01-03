@@ -2,10 +2,10 @@
 import { Module } from '@nestjs/common';
 import { ChatroomService } from './chatroom.service';
 import { ChatroomController } from './chatroom.controller';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { ChatroomGateway } from './chatroom.gateway';
 import { JwtModule } from '@nestjs/jwt';
-import { PrismaModule } from 'src/prisma/prisma.module';
+import { PrismaModule } from '../prisma/prisma.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({

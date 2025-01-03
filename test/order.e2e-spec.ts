@@ -15,19 +15,19 @@ import { OrdersService } from '../src/orders/orders.service';
 import { OrdersController } from '../src/orders/orders.controller';
 
 describe('OrderController (e2e)', () => {
-  console.log("Starting Order test");
+  // console.log("Starting Order test");
   let app: INestApplication;
   let authService: AuthService;
   let prismaService: PrismaService;
 
   const testUser = {
-    email: 'testuser@example.com',
+    email: 'user@example.com',
     password: 'Test@123',
     role: UserRole.REGULAR,
   };
 
   const testUser2 = {
-    email: 'testuser2@example.com',
+    email: 'user2@example.com',
     password: 'Test2@123',
     role: UserRole.REGULAR,
   };
@@ -51,7 +51,7 @@ describe('OrderController (e2e)', () => {
   }
 
   const adminUser = {
-    email: 'admin@example.com',
+    email: 'admin1@example.com',
     password: 'Admin@123',
     role: UserRole.ADMIN,
   };
@@ -90,15 +90,18 @@ describe('OrderController (e2e)', () => {
     prismaService = module.get<PrismaService>(PrismaService);
 
     try {
-      await prismaService.message.deleteMany({});
-      await prismaService.chatroom.deleteMany({});
-      await prismaService.order.deleteMany({});
-      await prismaService.user.deleteMany({});
+      await prismaService.$transaction(async (tx) => {
+        await tx.message.deleteMany()
+        await tx.chatroom.deleteMany()
+        await tx.order.deleteMany()
+        await tx.user.deleteMany();
+      });
+      await new Promise((resolve) => setTimeout(resolve, 3000));
     } catch (error) {
       console.error('Error during database cleanup:', error);
     }
 
-    console.log("Ready to test");
+    // console.log("Ready to test");
   });
 
   it('should register new users and return user data', async () => {
@@ -187,6 +190,33 @@ describe('OrderController (e2e)', () => {
     expect(typeof response.body.access_token).toBe('string');
   });
 
+  it('user should fail create an order with incomplete fields', async () => {
+    // Try without quantity
+    let response = await request(app.getHttpServer())
+      .post('/orders')
+      .send({
+        description: user1Order.description
+      })
+      .set('Authorization', `Bearer ${user1AuthToken}`)
+      .expect(409);
+
+    expect(response.body).toHaveProperty('error', 'Conflict');
+    expect(response.body).toHaveProperty('message', "Quantity Missing");
+
+    // Try without speccification
+    response = await request(app.getHttpServer())
+      .post('/orders')
+      .send({
+        description: user1Order.description,
+        quantity: user1Order.quantity
+      })
+      .set('Authorization', `Bearer ${user1AuthToken}`)
+      .expect(409);
+
+    expect(response.body).toHaveProperty('error', 'Conflict');
+    expect(response.body).toHaveProperty('message', "Specifications Missing");
+  });
+
   it('user1 should create an order', async () => {
 
     const response = await request(app.getHttpServer())
@@ -195,8 +225,8 @@ describe('OrderController (e2e)', () => {
       .set('Authorization', `Bearer ${user1AuthToken}`)
       .expect(201);
 
-
-    // console.log("User1 Order response: ", response.body);
+    const decoded = require('jsonwebtoken').decode(user1AuthToken);
+    // console.log(decoded)
     user1OrderId = response.body.newOrder.id;
 
     expect(typeof response.body).toBe('object');
@@ -209,11 +239,9 @@ describe('OrderController (e2e)', () => {
     const response = await request(app.getHttpServer())
       .post('/orders')
       .send(user2Order)
-      .set('Authorization', `Bearer ${user1AuthToken}`)
+      .set('Authorization', `Bearer ${user2AuthToken}`)
       .expect(201);
 
-
-    // console.log("User1 Order response: ", response.body);
     user2OrderId = response.body.newOrder.id;
 
     expect(typeof response.body).toBe('object');
@@ -226,24 +254,74 @@ describe('OrderController (e2e)', () => {
     const response = await request(app.getHttpServer())
       .get('/orders')
       .set('Authorization', `Bearer ${user1AuthToken}`)
-      .expect(201);
+      .expect(200);
 
-
-    console.log("User1 Order response: ", response.body);
-    user2OrderId = response.body.newOrder.id;
-
-    expect(typeof response.body).toBe('array');
+    // console.log("User1 Order response: ", response.body);
     expect(response.body.length).toBe(1);
-    expect(response.body[1].id).toHaveProperty('id', user1OrderId);
+    expect(response.body[0]).toHaveProperty('id', user1OrderId);
+    expect(response.body[0]).toHaveProperty('chatroom');
   });
 
+  it('user2 should see only their orders', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/orders')
+      .set('Authorization', `Bearer ${user2AuthToken}`)
+      .expect(200);
+
+
+    // console.log("User1 Order response: ", response.body);
+    expect(response.body.length).toBe(1);
+    expect(response.body[0]).toHaveProperty('id', user2OrderId);
+    expect(response.body[0]).toHaveProperty('chatroom');
+  });
+
+  it('user1 should fail to see user2 orders', async () => {
+
+    const response = await request(app.getHttpServer())
+      .get(`/orders/${user2OrderId}`)
+      .set('Authorization', `Bearer ${user1AuthToken}`)
+      .expect(401);
+
+    expect(response.body).toHaveProperty('error', "Unauthorized");
+    expect(response.body).toHaveProperty('message', "You are not authorized to see this order");
+  });
+
+  it('user2 should fail to see user1 orders', async () => {
+
+    const response = await request(app.getHttpServer())
+      .get(`/orders/${user1OrderId}`)
+      .set('Authorization', `Bearer ${user2AuthToken}`)
+      .expect(401);
+
+    expect(response.body).toHaveProperty('error', "Unauthorized");
+    expect(response.body).toHaveProperty('message', "You are not authorized to see this order");
+  });
+
+  it('Admin should should see all orders', async () => {
+
+    const response = await request(app.getHttpServer())
+      .get(`/orders`)
+      .set('Authorization', `Bearer ${adminAuthToken}`)
+      .expect(200);
+
+    expect(response.body.length).toBe(2); // Length of total orders
+    expect(response.body[0]).toHaveProperty('id', user1OrderId); // Order for user1
+    expect(response.body[1]).toHaveProperty('id', user2OrderId); // Order for user2
+  });
 
   afterAll(async () => {
     try {
-      await prismaService.message.deleteMany({});
-      await prismaService.chatroom.deleteMany({});
-      await prismaService.order.deleteMany({});
-      await prismaService.user.deleteMany({});
+      // await prismaService.message.deleteMany({});
+      // await prismaService.chatroom.deleteMany({});
+      // await prismaService.order.deleteMany({});
+      // await prismaService.user.deleteMany({});
+      await prismaService.$transaction(async (tx) => {
+        await tx.message.deleteMany()
+        await tx.chatroom.deleteMany()
+        await tx.order.deleteMany()
+        await tx.user.deleteMany();
+      });
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     } catch (error) {
       console.error('Error during database cleanup:', error);
     }

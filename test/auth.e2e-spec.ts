@@ -13,7 +13,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtAuthStrategy } from '../src/auth/jwt.strategy';
 
 describe('AuthController (e2e)', () => {
-  console.log("Starting Auth test");
+  // console.log("Starting Auth test");
   let app: INestApplication;
   let authService: AuthService;
   let prismaService: PrismaService;
@@ -62,12 +62,12 @@ describe('AuthController (e2e)', () => {
       await prismaService.chatroom.deleteMany({});
       await prismaService.order.deleteMany({});
       await prismaService.user.deleteMany({});
-
+      await new Promise((resolve) => setTimeout(resolve, 3000));
     } catch (error) {
       console.error('Error during database cleanup:', error);
     }
 
-    console.log("Ready to test");
+    // console.log("Ready to test");
   });
 
   it('should register a new user and return user data', async () => {
@@ -181,6 +181,8 @@ describe('AuthController (e2e)', () => {
       await prismaService.chatroom.deleteMany({});
       await prismaService.order.deleteMany({});
       await prismaService.user.deleteMany({});
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // console.log("auth test complete")
 
     } catch (error) {
       console.error('Error during database cleanup:', error);
